@@ -1,7 +1,8 @@
 /**
  * Created by houdong on 2017/10/30.
  */
-import React,{ Component,PropTypes} from 'react';
+import React,{ Component} from 'react';
+import PropTypes from 'prop-types';
 import '../css/CacadeSelect.css';
 
 export default class CascadeSelect extends Component{
@@ -10,20 +11,36 @@ export default class CascadeSelect extends Component{
         this.state={
             secondOptions:[],
             thirdOptions:[],
-            hideAll:true,
+            hideAll:false,
             selectText:"",
             hideThird:false,
         }
         this.onClickHandler = this.onClickHandler.bind(this);
+        this.openSelectList = this.openSelectList.bind(this);
+    }
+
+    openSelectList(e){
+       let obj = e.currentTarget.getElementsByTagName("i");
+       if(obj.length > 0){
+           let data = obj[0];
+           data.className="anticon anticon-down cascader-picker-arrow cascader-picker-arrow-expand";
+       }
+       this.setState({
+           hideAll:true
+       })
+        console.log("e===",e.currentTarget,obj);
     }
     onClickHandler(e,str){
         let content='';
         let {options} = this.props;
+        let liNode = null;
         if(e.target.nodeName === 'LI'){
             content = e.target.title;
+            liNode = e.target;
         }
         if(e.target.parentNode.nodeName === 'LI'){
             content = e.target.parentNode.title;
+            liNode = e.target.parentNode;
         }
         let secondOptions=[];
         let thirdOptions=[];
@@ -47,6 +64,7 @@ export default class CascadeSelect extends Component{
                             })
                         }
                     })
+
                     break;
                 case "second":
                     options.map((item) => {
@@ -103,9 +121,46 @@ export default class CascadeSelect extends Component{
             })
         }
         let flag = true;
-        // if(str == "third"){
-        //     flag  = false;
-        // }
+        let nodeList = liNode.parentNode.childNodes;
+        if(str == "third"){
+            // flag  = false;
+            for(let i=0;i<nodeList.length;i++){
+                if(nodeList[i].title == content){
+                    nodeList[i].className = "cascader-menu-item cascader-menu-item-active"
+                }else{
+                    nodeList[i].className = "cascader-menu-item"
+                }
+            }
+        }else{
+            if(str == "second"){
+                let ulNodeList = e.currentTarget.parentNode.childNodes;
+                let liNodeList = ulNodeList[ulNodeList.length-1].childNodes;
+                for(let i=0;i<liNodeList.length;i++){
+                    liNodeList[i].className = "cascader-menu-item";
+                }
+            }
+            if(str == "first"){
+                let ulNodeList = e.currentTarget.parentNode.childNodes;
+                for(let j=1;j<ulNodeList.length;j++){
+                    let liNodeList = ulNodeList[j].childNodes;
+                    for(let i=0;i<liNodeList.length;i++){
+                        if(j==1){
+                            liNodeList[i].className = "cascader-menu-item cascader-menu-item-expand";
+                        }else{
+                            liNodeList[i].className = "cascader-menu-item";
+                        }
+
+                    }
+                }
+            }
+            for(let j=0;j<nodeList.length;j++){
+                if(nodeList[j].title == content){
+                    nodeList[j].className = "cascader-menu-item cascader-menu-item-expand cascader-menu-item-active"
+                }else{
+                    nodeList[j].className = "cascader-menu-item cascader-menu-item-expand"
+                }
+            }
+        }
         let selectTxt = this.state.selectText != "" ? this.state.selectText+content +"/": content + "/";
         this.setState({
             secondOptions:secondOptions.length > 0 ? secondOptions:this.state.secondOptions,
@@ -116,9 +171,17 @@ export default class CascadeSelect extends Component{
         })
     }
     render(){
+        console.log("测试开始======",this.props)
         const { options } = this.props;
         return(
             <div>
+                <span className="cascader-picker" onClick={this.openSelectList}>
+                    <span className="cascader-picker-label"/>
+                    <input type="text" className="simple-input cascader-input "
+                           value="" readOnly="" autoComplete="off"
+                           placeholder="Please select"/>
+                    <i className="anticon anticon-down cascader-picker-arrow"/>
+                </span>
                 {
                     this.state.hideAll ? <div className="cascader-menus">
                             <div>
@@ -169,5 +232,5 @@ export default class CascadeSelect extends Component{
     }
 }
 CascadeSelect.propTypes= {
-    options: PropTypes.array.isRequired,
+    options: PropTypes.array.isRequired
 }
