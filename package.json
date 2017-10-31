@@ -1,6 +1,6 @@
 {
-  "name": "simplecomponent",
-  "version": "1.0.0",
+  "name": "supercomponent",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,9 @@
     "url": "https://github.com/sunhoudong/SimpleComponent/issues"
   },
   "homepage": "https://github.com/sunhoudong/SimpleComponent#readme",
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
