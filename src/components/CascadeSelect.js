@@ -5,6 +5,8 @@ import React,{ Component} from 'react';
 import PropTypes from 'prop-types';
 import '../css/CacadeSelect.css';
 
+let me=null;
+
 export default class CascadeSelect extends Component{
     constructor(props){
         super(props);
@@ -19,17 +21,72 @@ export default class CascadeSelect extends Component{
         this.openSelectList = this.openSelectList.bind(this);
     }
 
-    openSelectList(e){
-       let obj = e.currentTarget.getElementsByTagName("i");
-       if(obj.length > 0){
-           let data = obj[0];
-           data.className="anticon anticon-down cascader-picker-arrow cascader-picker-arrow-expand";
-       }
-       this.setState({
-           hideAll:true
-       })
-        console.log("e===",e.currentTarget,obj);
+    componentDidMount(){
+        me = this;
+        document.body.addEventListener("click",this.onBodyClickHandler)
     }
+    componentWillUnmount(){
+        document.body.removeEventListener("click",this.onBodyClickHandler)
+        me = null;
+    }
+
+    onBodyClickHandler(e){
+        if(e.target.parentNode.nodeName == "BODY"){
+            me.setState({
+                selectText:""
+            })
+            let obj = e.currentTarget.getElementsByTagName("i");
+            let data=null;
+            if(obj.length > 0) {
+                data = obj[0];
+                data.className = "anticon anticon-down cascader-picker-arrow";
+                let {options} = me.props;
+                let textList=[];
+                options.map((item)=>{
+                    let first="";
+                    if(item["checked"]){
+                        first = item["value"]+"/";
+                        item["children"].map((data)=>{
+                            if(data["checked"]){
+                                let second = first+data["value"]+"/";
+                                data["children"].map((info)=>{
+                                    if(info["checked"]){
+                                        let third = second+info["value"];
+                                        textList.push(third);
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+                me.setState({
+                    selectText:textList.join(", "),
+                    hideAll: false
+                });
+            }
+        }
+    }
+    /**选择框点击时**/
+    openSelectList(e){
+        let obj = e.currentTarget.getElementsByTagName("i");
+        let data=null;
+        if(obj.length > 0) {
+            data = obj[0];
+            if(this.state.hideAll){
+                data.className="anticon anticon-down cascader-picker-arrow";
+                this.setState({
+                    hideAll:false
+                });
+            }else{
+                data.className="anticon anticon-down cascader-picker-arrow cascader-picker-arrow-expand";
+                this.setState({
+                    hideAll:true
+                });
+            }
+        }
+    }
+
+    /**下拉菜单点击**/
     onClickHandler(e,str){
         let content='';
         let {options} = this.props;
@@ -48,7 +105,6 @@ export default class CascadeSelect extends Component{
         this.setState({
             secondOptions:[],
             thirdOptions:[],
-            selectText:""
         })
         if(e.target.nodeName === "INPUT"){
             switch(str){
@@ -57,9 +113,9 @@ export default class CascadeSelect extends Component{
                         if(item["value"] == content){
                             item.checked = item.checked ? false : true;
                             item["children"].map((data) => {
-                                data.checked = data.checked ? false : true;
+                                data.checked = item.checked;
                                 data["children"].map((info) =>{
-                                    info.checked = info.checked ? false : true;
+                                    info.checked = data.checked;
                                 })
                             })
                         }
@@ -72,14 +128,13 @@ export default class CascadeSelect extends Component{
                             if(data["value"] == content){
                                 data.checked = data.checked ? false : true;
                                 data["children"].map((info) => {
-                                    info.checked = info.checked ? false : true;
+                                    info.checked = data.checked;
                                 })
                             }
                         })
                     });
                     options.map((item)=>{
                         let index = item["children"].findIndex(info => info.checked == true);
-                        console.log("index===",index)
                         item.checked = index > -1 ? true : false;
                     })
                     break;
@@ -123,7 +178,6 @@ export default class CascadeSelect extends Component{
         let flag = true;
         let nodeList = liNode.parentNode.childNodes;
         if(str == "third"){
-            // flag  = false;
             for(let i=0;i<nodeList.length;i++){
                 if(nodeList[i].title == content){
                     nodeList[i].className = "cascader-menu-item cascader-menu-item-active"
@@ -161,24 +215,22 @@ export default class CascadeSelect extends Component{
                 }
             }
         }
-        let selectTxt = this.state.selectText != "" ? this.state.selectText+content +"/": content + "/";
         this.setState({
             secondOptions:secondOptions.length > 0 ? secondOptions:this.state.secondOptions,
             thirdOptions:thirdOptions.length > 0 ? thirdOptions:this.state.thirdOptions,
             hideAll:flag,
-            selectText:selectTxt,
             hideThird:hideThird,
         })
     }
+
     render(){
-        console.log("测试开始======",this.props)
         const { options } = this.props;
         return(
-            <div>
+            <div className="main_select">
                 <span className="cascader-picker" onClick={this.openSelectList}>
                     <span className="cascader-picker-label"/>
                     <input type="text" className="simple-input cascader-input "
-                           value="" readOnly="" autoComplete="off"
+                           value={this.state.selectText} readOnly="" autoComplete="off"
                            placeholder="Please select"/>
                     <i className="anticon anticon-down cascader-picker-arrow"/>
                 </span>
@@ -187,10 +239,10 @@ export default class CascadeSelect extends Component{
                             <div>
                                 <ul className="cascader-menu" onClick={(e)=>this.onClickHandler(e,"first")}>
                                     {
-                                        options.map((item)=>{
+                                        options.map((item,index)=>{
                                             return(
-                                                <li className="cascader-menu-item cascader-menu-item-expand" title={item["value"]}>
-                                                    <input type="checkbox" className="check_select" checked={item.checked}/>
+                                                <li key={"item_"+index} className="cascader-menu-item cascader-menu-item-expand" title={item["value"]}>
+                                                    <input type="checkbox" className="check_select" checked={item.checked} readOnly/>
                                                     <span>{item["value"]}</span>
                                                 </li>
                                             )
@@ -199,10 +251,10 @@ export default class CascadeSelect extends Component{
                                 </ul>
                                 {
                                     this.state.secondOptions.length > 0 ? <ul className="cascader-menu" onClick={(e)=>this.onClickHandler(e,"second")}>{
-                                            this.state.secondOptions.map((item) => {
+                                            this.state.secondOptions.map((item,index) => {
                                                 return(
-                                                    <li className="cascader-menu-item cascader-menu-item-expand" title={item["value"]}>
-                                                        <input type="checkbox" className="check_select" checked={item.checked}/>
+                                                    <li key={"key_"+index} className="cascader-menu-item cascader-menu-item-expand" title={item["value"]}>
+                                                        <input type="checkbox" className="check_select" checked ={item.checked} readOnly/>
                                                         <span>{item["value"]}</span>
                                                     </li>
                                                 )
@@ -213,10 +265,10 @@ export default class CascadeSelect extends Component{
                                 {
                                     this.state.thirdOptions.length > 0 && !this.state.hideThird ?
                                         <ul className="cascader-menu" onClick={(e)=>this.onClickHandler(e,"third")}>{
-                                            this.state.thirdOptions.map((item) => {
+                                            this.state.thirdOptions.map((item,index) => {
                                                 return(
-                                                    <li className="cascader-menu-item" title={item["value"]}>
-                                                        <input type="checkbox" className="check_select" checked={item.checked}/>
+                                                    <li key={"li_"+index} className="cascader-menu-item" title={item["value"]}>
+                                                        <input type="checkbox" className="check_select" checked={item.checked} readOnly/>
                                                         <span>{item["value"]}</span>
                                                     </li>
                                                 )
