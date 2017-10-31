@@ -1,8 +1,8 @@
 {
   "name": "supercomponent",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "",
-  "main": "index.js",
+  "main": "",
   "scripts": {
     "build": "webpack",
     "start": "webpack-dev-server"
